@@ -41,7 +41,7 @@ event init(i=0)
   char targetname[100];
   sprintf (targetname, "dump%g", snapshot_time);
   if (!restore (targetname)) {
-    fprintf(ferr, "Not restored!\n");
+    fprintf(ferr, "lsNot restored!\n");
     return 1;
   }
   if (pid() == 0) {

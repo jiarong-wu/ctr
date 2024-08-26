@@ -1,9 +1,11 @@
 slurm-*.out
 *.png
 *.csv
+*~
 
 post-processing/windwave/notebooks/.ipynb_checkpoints/
 post-processing/windwave/windwave/.ipynb_checkpoints/
 post-processing/windwave/windwave/__pycache__/
 post-processing/.ipynb_checkpoints/
 source/.qcc/
+post-processing/data/

@@ -1,9 +1,13 @@
 README.md
 setup.py
+windwave/Amplitude.py
 windwave/__init__.py
 windwave/defs.py
+windwave/fio.py
+windwave/helper.py
 windwave/phase.py
 windwave/prepare.py
+windwave/utils.py
 windwave.egg-info/PKG-INFO
 windwave.egg-info/SOURCES.txt
 windwave.egg-info/dependency_links.txt
