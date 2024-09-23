@@ -2,10 +2,14 @@ slurm-*.out
 *.png
 *.csv
 *~
+*.nc
 
 post-processing/windwave/notebooks/.ipynb_checkpoints/
 post-processing/windwave/windwave/.ipynb_checkpoints/
 post-processing/windwave/windwave/__pycache__/
 post-processing/.ipynb_checkpoints/
+post-processing/windwave/script/.ipynb_checkpoints/
+post-processing/windwave/.ipynb_checkpoints/setup-checkpoint.py
 source/.qcc/
 post-processing/data/
+post-processing/plots/

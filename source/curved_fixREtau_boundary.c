@@ -233,7 +233,7 @@ event movies (t += 0.1) {
 
 event eta_output (t += 0.1) {
   if (t > RELEASETIME) // Event does not take variable time condition 
-    output_twophase (t);
+    output_twophase (t, MAXLEVEL);
 }
 
 scalar pair[];
@@ -244,6 +244,9 @@ event turbulence_stat (t += 0.1) {
   int Nslice = 256;
   int OUTLEVEL = 9;
   double L0 = 2.*pi;
+
+  foreach()
+    pair[] = p[]*(1-f[]);
 
   // Spanwise averaged
   int res = 9;
@@ -259,21 +262,24 @@ event turbulence_stat (t += 0.1) {
   output_2d_span_avg (filename,pair ,res, do_linear, print_bin);
 
   // Slices: too expensive to output for now
-  // double zslice = -L0/2.+L0/2./Nslice;
-  // for (int i=0; i<Nslice; i++) {
-  //   sprintf (filename, "./field/ux_t%g_slice%d", t, i);
-  //   sliceXY (filename,u.x,zslice,OUTLEVEL,do_linear);
-  //   sprintf (filename, "./field/uy_t%g_slice%d", t, i);
-  //   sliceXY (filename,u.y,zslice,OUTLEVEL,do_linear);
-  //   sprintf (filename, "./field/uz_t%g_slice%d", t, i);
-  //   sliceXY (filename,u.z,zslice,OUTLEVEL,do_linear);
-  //   sprintf (filename, "./field/f_t%g_slice%d", t, i);
-  //   sliceXY (filename,f,zslice,OUTLEVEL,do_linear);
-  //   sprintf (filename, "./field/pair_t%g_slice%d", t, i);
-  //   sliceXY (filename,pair,zslice,OUTLEVEL,do_linear);
-  //   zslice += L0/Nslice;
-  // }
+  if (fmod(t, 1.0) == 0.0) {
+    double zslice = -L0/2.+L0/2./Nslice;
+    for (int i=0; i<Nslice; i++) {
+      sprintf (filename, "./field/ux_t%g_slice%d", t, i);
+      sliceXY (filename,u.x,zslice,OUTLEVEL,do_linear);
+      sprintf (filename, "./field/uy_t%g_slice%d", t, i);
+      sliceXY (filename,u.y,zslice,OUTLEVEL,do_linear);
+      sprintf (filename, "./field/uz_t%g_slice%d", t, i);
+      sliceXY (filename,u.z,zslice,OUTLEVEL,do_linear);
+      sprintf (filename, "./field/f_t%g_slice%d", t, i);
+      sliceXY (filename,f,zslice,OUTLEVEL,do_linear);
+      sprintf (filename, "./field/pair_t%g_slice%d", t, i);
+      sliceXY (filename,pair,zslice,OUTLEVEL,do_linear);
+      zslice += L0/Nslice;
+    }
+  }
 }
+
 
 
 /**

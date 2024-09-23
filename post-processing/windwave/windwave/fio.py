@@ -6,7 +6,7 @@ import pandas as pd
 
 ############ Read in 2D span-wise averaged data, along time axis ##############
 
-def read_fields_2D (path, times, NSLICE=256, NGRID=512, varlist=['ux','uy','uz','f']):
+def read_fields_2D (path, times, NGRID=512, varlist=['ux','uy','uz','f']):
     
     filename = path + 'netcdf/span_aver.nc' 
 
@@ -47,11 +47,76 @@ def read_fields_2D (path, times, NSLICE=256, NGRID=512, varlist=['ux','uy','uz',
         # ds.to_netcdf(filename, encoding=encoding)
                 
         return ds
+
+########## Read in 3D slices along Y or Z ##################
+
+''' Read in the slices and construct the xarray dataset. 
+    Need to mkdir netcdf if the folder is not there. 
+    We have verified that slicing along Y or Z doesn't make a big difference 
+    so by default we use Z slices '''
+
+def read_fields_3D (path, t, NSLICE=256, NGRID=512, varlist=['ux','uy','uz','f'], SLICE='Z', SAVE=True):
+
+    # Check if the netcdf file already exist
+    if SLICE == 'Z':
+        filename = path + 'netcdf/field_eta_t%g.nc' %t 
+    elif SLICE == 'Y':
+        filename = path + 'netcdf/field_yslice_t%g.nc' %t 
+    
+    if os.path.exists(filename):
+        print('NetCDF file exist! Located at ' + filename)
+        ds = xr.open_dataset(filename, engine='netcdf4', decode_cf=True)
+    
+    else:
+        # if not construct new xarray dataset
+        # axis0 in z, axis1 in x, axis2 in y  (in the code)
+        print('Reading t=%g slices...' %t)
+        x = np.linspace(-np.pi, np.pi, NGRID, endpoint=False) + 2*np.pi/NGRID/2
+        y = np.linspace(0, 2*np.pi, NGRID, endpoint=False) + 2*np.pi/NGRID/2
+        z = np.linspace(-np.pi, np.pi, NSLICE, endpoint=False) + 2*np.pi/NSLICE/2
+        
+        # TODO: write read in eta file
+        # ...
+
+        # read in slices
+        for i, var in enumerate(varlist):   
+            field = []
+            # NOTICE: since 2024/07 we have fixed z slices so (0, NSLICE) instead of (0, NSLICE-1)
+            for sn in range (0, NSLICE):
+                if SLICE == 'Z':
+                    slicename = path + 'field/' + var + '_t%g_zslice%g' % (t,sn)
+                elif SLICE == 'Y':
+                    slicename = path + 'field/' + var + '_t%g_yslice%g' % (t,sn)
+                snapshot = np.fromfile(slicename, dtype=np.float64)
+                snapshot = snapshot.reshape([NGRID,NGRID])
+                field.append(snapshot)
+                
+            field = np.array(field)
+            
+            if SLICE == 'Z':
+                if i == 0:
+                    ds = xr.Dataset({var: (['z','x','y'], field)}, coords={'x': x, 'y': y, 'z': z})                    
+                else:
+                    ds = ds.assign(**{var: (['z','x','y'], field)})
+            elif SLICE == 'Y':
+                if i == 0:
+                    ds = xr.Dataset({var: (['y','x','z'], field)}, coords={'x': x, 'y': y, 'z': z})                    
+                else:
+                    ds = ds.assign(**{var: (['y','x','z'], field)})    
+                    
+        # Writing to file with some compression
+        if SAVE:
+            encoding = {}
+            for var_name in ds.data_vars:
+                encoding[var_name] = {'dtype': 'float32', 'zlib': True}
+            ds.to_netcdf(filename, encoding=encoding)
+
+    # Shift the values along x axis
+    # field['value'] = np.roll(field['value'], -idx, axis=1)
+    return ds
         
 ########## Interpolate eta onto dataset coordinate and store as new variable ############
-def read_eta (time, casepath):
-    
-    filename = casepath + 'eta/eta_t%g' %time
+def read_eta (filename):
     pruningz = 1+0.4/4.
     snapshot = pd.read_table(filename, delimiter = ',')
     
@@ -63,13 +128,6 @@ def read_eta (time, casepath):
     snapshot = snapshot.sort_values(by=['x','z'])  
     
     return snapshot
-
-############ Compute phase using Hilbert Transform ##############
-def compute_phase(eta_1D): 
-    
-    analytic_signal = hilbert(eta_1D)
-    phase = np.angle(analytic_signal)
-    return phase
     
 
 ############ Old code ###############

@@ -28,6 +28,33 @@ void sliceXY(char * fname, scalar s, double zp, int maxlevel, bool do_linear) {
   fclose (fpver); // we close at the end
 }
 
+void sliceXZ(char * fname, scalar s, double yp, int maxlevel, bool do_linear) {
+
+  FILE * fpver = fopen (fname,"w");
+  int nn = (1<<maxlevel);
+  double ** field = matrix_new (nn, nn, sizeof(double));
+  double stp = L0/(double)nn;
+
+  for (int i = 0; i < nn; i++) {
+    double xp = stp*i + X0 + stp/2.;
+    for (int j = 0; j < nn; j++) {
+      double zp = stp*j + Z0 + stp/2.;
+      field[i][j] = interpolate(s,xp,yp,zp,do_linear);
+    }
+  }
+
+  if (pid() == 0) { // only the master prints!
+    for (int i = 0; i < nn; i++) {
+      for (int j = 0; j < nn; j++) {
+	      fwrite ( &field[i][j], sizeof(double), 1, fpver);
+      }
+    }
+    fflush (fpver);
+  }
+  matrix_free (field);
+  fclose (fpver); // we close at the end
+}
+
 /** 
    Perform the spanwise averaging in a memory efficient way. */
 
